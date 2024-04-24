@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        maven 'maven-3.9.6'
+    }
     
     environment {
         SONAR_TOKEN = credentials('sonarcloud')
@@ -19,7 +22,7 @@ pipeline {
                     def projectKey = 'codingwithkavya'
                     
                     def analysisParams = [
-                        'projectKey': codingwithkavya,
+                        'projectKey': projectKey,
                         'name': 'Jenkins Build',
                         'branch': 'master', // Specify the branch you want to analyze
                         'token': env.SONAR_TOKEN
