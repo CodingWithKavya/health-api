@@ -4,31 +4,30 @@ def gitUrl = 'https://github.com/CodingWithKavya/health-api.git' // Replace with
 
 pipeline {
   agent any
-  environment {
-        SONAR_TOKEN = credentials('sonarcloud')
-    }
 
   stages {
     stage('Checkout Code') {
       steps {
-        git branch: branch, url: gitUrl
+        bat "git checkout ${branch} && git pull origin ${branch}" // Use bat for Windows commands
       }
     }
     
     stage('Code Analysis') {
       steps {
         script {
-          // Set SonarCloud server URL and token as environment variables
-          sh "export sonar.host.url=https://sonarcloud.io"
-          sh "export SONAR_TOKEN=${env.SONAR_TOKEN}" // Replace with environment variable holding SonarCloud token
+          // Define SonarCloud server URL and token as Jenkins job environment variables
+          environment {
+            SONAR_HOST_URL = 'https://sonarcloud.io'
+            SONAR_TOKEN = '$sonarcloud' // Reference token from credential
+          }
 
           // Define additional SonarCloud properties (optional)
-          sh """
+          bat """
           echo 'sonar.sources=src/main/java' // Replace with path to your source code
           """
           
-          // Run SonarCloud analysis
-          sh 'mvn sonar:sonar'
+          // Run SonarCloud analysis using powershell
+          bat 'powershell "mvn sonar:sonar"'
         }
       }
     }
