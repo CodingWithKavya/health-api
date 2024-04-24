@@ -1,47 +1,36 @@
+def projectKey = 'codingwithkavya' // Replace with your SonarCloud project key
+def branch = env.BRANCH_NAME ?: 'master' // Use branch name from environment or default to 'master'
+def gitUrl = 'https://github.com/CodingWithKavya/health-api.git' // Replace with your Git repository URL
+
 pipeline {
-    agent any
-    tools {
-        maven 'maven'
-    }
-    
-    environment {
+  agent any
+  environment {
         SONAR_TOKEN = credentials('sonarcloud')
     }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                git url: 'https://github.com/CodingWithKavya/health-api.git', branch: 'master'
-            }
-        }
-        
-        stage('SonarCloud Scan') {
-            steps {
-                script {
-                    def apiUrl = 'https://sonarcloud.io/api/'
-                    def projectKey = 'codingwithkavya'
-                    
-                    def analysisParams = [
-                        'projectKey': projectKey,
-                        'name': 'Jenkins Build',
-                        'branch': 'master', // Specify the branch you want to analyze
-                        'token': env.SONAR_TOKEN
-                    ]
-                    
-                    def response = httpRequest(
-                        contentType: 'APPLICATION_JSON',
-                        httpMode: 'POST',
-                        requestBody: analysisParams,
-                        url: apiUrl + 'ce/submit'
-                    )
-                    
-                    if (response.status != 200) {
-                        error "Failed to trigger SonarCloud analysis: ${response.status} - ${response.content}"
-                    } else {
-                        echo "SonarCloud analysis triggered successfully."
-                    }
-                }
-            }
-        }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        git branch: branch, url: gitUrl
+      }
     }
+    
+    stage('Code Analysis') {
+      steps {
+        script {
+          // Set SonarCloud server URL and token as environment variables
+          sh "export sonar.host.url=https://sonarcloud.io"
+          sh "export SONAR_TOKEN=${env.SONAR_TOKEN}" // Replace with environment variable holding SonarCloud token
+
+          // Define additional SonarCloud properties (optional)
+          sh """
+          echo 'sonar.sources=src/main/java' // Replace with path to your source code
+          """
+          
+          // Run SonarCloud analysis
+          sh 'mvn sonar:sonar'
+        }
+      }
+    }
+  }
 }
