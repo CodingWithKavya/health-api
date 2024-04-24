@@ -1,22 +1,24 @@
 pipeline {
     agent any
-    tools {
-        maven 'maven'
+    
+    environment {
+        SONAR_TOKEN = credentials('sonarcloud')
     }
-
+    
     stages {
-        stage('Git Checkout') {
+        stage('Checkout') {
             steps {
-                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/CodingWithKavya/health-api.git']])
-                echo 'Git Checkout Completed'
+                git url: 'https://github.com/CodingWithKavya/health-api.git', branch: 'master'
             }
         }
-
-        stage('SonarQube Analysis') {
+        
+        stage('SonarQube Scan') {
             steps {
-                withSonarQubeEnv('Sonarcloud') {
-                    sh '''mvn clean verify sonar:sonar -Dsonar.projectKey=CodingWithKavya_health-api -Dsonar.projectName='CodingWithKavya' -Dsonar.host.url=https://sonarcloud.io/''' //port 9000 is default for sonar
-                    echo 'SonarQube Analysis Completed'
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv('SonarCloud') {
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=codingwithkavya -Dsonar.organization=CodingWithKavya -Dsonar.sources=src"
+                    }
                 }
             }
         }
