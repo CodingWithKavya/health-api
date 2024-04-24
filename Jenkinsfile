@@ -19,7 +19,7 @@ pipeline {
                     def projectKey = 'codingwithkavya'
                     
                     def analysisParams = [
-                        'projectKey': projectKey,
+                        'projectKey': codingwithkavya,
                         'name': 'Jenkins Build',
                         'branch': 'master', // Specify the branch you want to analyze
                         'token': env.SONAR_TOKEN
